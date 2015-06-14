@@ -16,7 +16,6 @@ class data_frame:
       
         lengths = set(len(el) for el in self.df)
 
-        
         if len(lengths)>1:
             
             self.df = [[]]
@@ -264,7 +263,106 @@ class data_frame:
         
         # (value) is here to be understood as the number of last rows we want to visualize. By default we set it to 1
 
+    # Appending new columns to the DataFrame
+
+    def insert(self,new_list, by = 'col', fill_with_None = True):
+
+        # by : indicates how we want to append the new list to the DataFrame, either by column or by row. The default option is by column
+
+        if by == 'col':
+
+            # Check that the new column has all the number of rows required, otherwise fill with None if less and if attribute set to true. Otherwise, error
+
+            if len(new_list) < self.nrows:
+
+                new_list.extend([None]*(self.nrows-len(new_list)))
+                self.df.append(new_list)
+                self.ncols +=1
+                self.cnames.append(self.ncols)
+
+            elif len(new_list) > self.nrows:
+
+                print 'Error! The new column has too many rows'
+
+            else:
+
+                self.df.append(new_list)
+                self.ncols += 1
+                self.cnames.append(self.ncols)
+                
+
+        elif by == 'row':
+
+            if len(new_list) < self.ncols:
+
+                new_list.extend([None]*(self.ncols-len(new_list)))
+
+                ind = 0
+
+                for col in self.df:
+
+                    col.append(new_list[ind])
+
+                    ind += 1
+                    
+
+            elif len(new_list) > self.ncols:
+
+                print 'Error! The new row has too many entries'
+
+            else:
+
+                ind = 0
+
+                for col in self.df:
+
+                    col.append(new_list[ind])
+                    
+                    ind += 1
+
+            # Updating number of rows and their names
+            
+            self.nrows +=1
+            self.rnames.append(self.nrows)
     
+
+    # Removing either columns or rows from the dataframe
+
+    def eliminate(self, col='',row=''):
+
+        # (col) & (row) represents respectively the column and/or row names we want to eliminate
+        
+        # Remember the two List Methods to remove elements: 1)list.remove(elem_name) -- 2) del list[elem_index]
+        
+        # 1) PROCESS COLUMNS
+
+        if type(col) == list:
+
+            pass
+
+        elif type(col) == int or type(col) == str:
+            
+            if col != '' and col in self.cnames:
+
+                # STEP 1 - Find the corresponding index/indices to the name/s supplied by the user
+
+                ind = self.cnames.index(col)
+                
+                del self.df[ind] # Remember Python starts counting elements of a list from zero
+
+                self.ncols -=1
+
+                self.cnames = self.cnames[:-1]
+
+            else:
+
+                print 'Error! The columns you want to delete do not correspond to those of the Data Frame. Select the appropriate names!' 
+
+        else:
+
+            print 'Error! Please choose either a single column and its name or multiple columns using a list of their names'
+    
+
     # Some SQL-Like / Relational Algebra statement to select only some rows within the data frame
     def select(self,col ='', cond_operator='', value='', out=0):
 
@@ -333,6 +431,7 @@ class data_frame:
         # Such columns can be indicated through single integers or names or lists of them or even slices objects
         # Supported implementation at June 2015: Only integers, list of integers
         view_columns = []
+        
         if type(out) == list:
             
             view_columns.extend(out)
@@ -342,26 +441,27 @@ class data_frame:
             view_columns.append(out)
 
         temp2 = data_frame([temp1.df[o-1] for o in view_columns])
+        
         print temp2
 
         # ======================= SOME OLD STUFF =============================
 
         # DataFrame out of Mattia Lists
-        #temp0 = [el.list for el in m_lists]
-        #m_dframe = data_frame(temp0)
-        #print m_dframe
+        # temp0 = [el.list for el in m_lists]
+        # m_dframe = data_frame(temp0)
+        # print m_dframe
                 
-        #lengths = [len(el) for el in self.df]
+        # lengths = [len(el) for el in self.df]
         
-        #temp1 = []
+        # temp1 = []
         
-        #for el in self.df:
+        # for el in self.df:
             
-            #temp1.append([el[i] for i in range(lengths[0]) if el[i] != None])
+            # temp1.append([el[i] for i in range(lengths[0]) if el[i] != None])
             
-        #temp2 = data_frame(temp1)
+        # temp2 = data_frame(temp1)
         
-        #print(temp1)
+        # print(temp1)
 
 
 # =========================================END OF CLASS DATA.FRAME ===================================
