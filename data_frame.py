@@ -1,4 +1,4 @@
-# Data Frames - Only Rectangular LIST of LISTS - See (R) - BETA Version - Written by Mattia Pennacchietti
+# Data Frames - See (R) - BETA Version - Written by Mattia Pennacchietti
 # The purpose is to manage tables of heterogenous Arrays. Not for computing purposes
 # Use together with other R-Like utilities (Mattia_lists)
 
