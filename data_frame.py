@@ -222,6 +222,7 @@ class data_frame:
                 # Returning a Data_Frame
                 
                 print temp2
+                
                 return temp2
 
             else:
@@ -532,6 +533,32 @@ class data_frame:
         # print(temp1)
 
 
+    def unique_rows(self):
+
+        # Keep track of duplicate rows
+
+        temp_duplicates = []
+
+        # Extract first all the rows from the Data Frame
+
+        rows = [[ el[i] for el in self.df] for i in range(self.nrows)]
+
+        for r in rows:
+
+            for r2 in range(rows.index(r)+1,self.nrows):
+
+                if (r == rows[r2]) == True:
+
+                    temp_duplicates.append(r2)
+
+        duplicates = temp_duplicates[::2]
+
+        print duplicates
+
+        self.eliminate(row=duplicates)
+
+        print self
+
 # =========================================END OF CLASS DATA.FRAME ===================================
 
 # ===================================HELPER FUNCTIONS TO USE THE DATA.FRAME===========================
@@ -540,11 +567,13 @@ class data_frame:
 def tail(data_frame,value):
 
     temp = data_frame.tail(value)
+    
     print temp
 
 def head(data_frame, value):
 
     temp = data_frame.head(value)
+    
     print temp
 
 def SQL(query):
@@ -554,19 +583,24 @@ def SQL(query):
 
     # Implementation through REGULAR EXPRESSIONS
     
-    col_regex = 'SELECT (.+) FROM .+ WHERE .+' 
+    col_regex = 'SELECT (.+) FROM .+ WHERE .+'
+    
     col = re.findall(col_regex,query)[0]
     
     df_regex = 'SELECT .+ FROM (.+) WHERE .+'
+    
     df = re.findall(df_regex,query)
     
     col_cond_regex = 'SELECT .+ FROM .+ WHERE (.+) .+ .+'
+    
     col_cond = re.findall(col_cond_regex,query)[0]
 
     op_cond_regex = 'SELECT .+ FROM .+ WHERE .+ (.+) .+'
+    
     op_cond = re.findall(op_cond_regex,query)[0]
 
     value_cond_regex = 'SELECT .+ FROM .+ WHERE .+ .+ (.+)'
+    
     value_cond = re.findall(value_cond_regex,query)[0]
 
     #select(self,col ='', cond_operator='', value='', out=0)
@@ -589,18 +623,24 @@ def SQL2(query):
     # Implementation through REGULAR EXPRESSIONS
 
     # MULTIPLE COLUMNS (sep = ',')
-    cols_regex = 'SELECT (.+) FROM .+ WHERE .+' 
+    cols_regex = 'SELECT (.+) FROM .+ WHERE .+'
+    
     cols = re.findall(cols_regex,query)[0]
+    
     cols = str(cols).split(',')
 
     # NO MULTIPLE DATAFRAMES
     df_regex = 'SELECT .+ FROM (.+) WHERE .+'
+    
     df = re.findall(df_regex,query)
     
     # MULTIPLE CONDITIONS - DEFAULT = (AND) CONDITIONS [Separator = ',']
     cond_regex = 'SELECT .+ FROM .+ WHERE (.+)'
+    
     cond = re.findall(cond_regex,query)[0]
+    
     cond = str(cond).split(',')
+    
     temp_cond = [el for el in cond]
 
     conditions = [el.split(' ') for el in temp_cond]
@@ -612,20 +652,21 @@ def SQL2(query):
 
     # EXECUTING THE QUERY
 
+    # STEP 1: IMPLENT THE METHOD SELECT AS DEFINED IN THE DATA_FRAME CLASS. INCLUDE ALL COLUMNS FOR NOW
+
     for num_cond in range(len(conditions)):
 
-        # IMPLENT THE METHOD SELECT AS DEFINED IN THE DATA_FRAME CLASS. INCLUDE ALL COLUMNS FOR NOW
-       
         temp_df = temp_df.select(int((conditions)[num_cond][0]),(conditions)[num_cond][1],(conditions)[num_cond][2],temp_df.cnames)
+
+    # STEP 2: PROJECT COLUMNS ON THE RESULTING RELATION FROM THE APPLIED CONDITIONS
+
+    temp_df = data_frame([temp_df.df[int(proj_col)-1] for proj_col in cols])
             
     #op_cond = re.findall(op_cond_regex,query)[0]
     #value_cond = re.findall(value_cond_regex,query)[0]
         
     #data.select(int(col_cond),op_cond,value_cond,int(col))
     print temp_df
-
-
-
 
 
 # ======================================== TESTING ===================================================
@@ -636,5 +677,5 @@ def SQL2(query):
 
 
 #Test1
-a=data_frame([[1,True,False,'Hello','World',None,False],[4,'AAPL',None,'LNKD','TWTR','FB','MS'],['BAC','DB','C',True,False,None,'BX']])
+a=data_frame([[4,4,False,'Hello','Hello',None,False],[4,4,None,'LNKD','LNKD','FB','MS'],[4,4,'C',True,True,None,'BX']])
 
