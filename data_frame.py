@@ -1,4 +1,4 @@
-# Data Frames - See (R) - BETA Version - Written by Mattia Pennacchietti
+# Data Frames - Only Rectangular LIST of LISTS - See (R) - BETA Version - Written by Mattia Pennacchietti
 # The purpose is to manage tables of heterogenous Arrays. Not for computing purposes
 # Use together with other R-Like utilities (Mattia_lists)
 
@@ -51,6 +51,7 @@ class data_frame:
                 elif type(row_names) == list  and len(row_names) < self.nrows:
 
                     remaining_rows = self.nrows - len(row_names)
+                    
                     self.rnames = row_names + list(range(len(row_names)+1,self.nrows+1))
 
             if col_names == '':
@@ -72,6 +73,7 @@ class data_frame:
                 elif type(col_names) == list and len(col_names) < self.ncols:
 
                     remaining_cols = self.ncols - len(col_names)
+                    
                     self.cnames = col_names + list(range(len(col_names)+1,self.ncols+1))
 
 
@@ -166,6 +168,7 @@ class data_frame:
                 else:
 
                     new_slice = slice(dims[0].start-1,dims[0].stop)
+                    
                     temp = data_frame([el[new_slice] for el in self.df])
                     
                 # Returning a List
@@ -183,6 +186,7 @@ class data_frame:
                 else:
                     
                     new_slice = slice(dims[1].start-1,dims[1].stop)
+                    
                     temp = self.df[new_slice]
                     
                 # Returning a List
@@ -200,6 +204,7 @@ class data_frame:
                 else:
                     
                     slice1 = slice(dims[1].start-1,dims[1].stop)
+                    
                     temp1 = data_frame(self.df[slice1])
                 
                 # Slicing rows
@@ -211,6 +216,7 @@ class data_frame:
                 else:
                     
                     slice0 = slice(dims[0].start-1,dims[0].stop)
+                    
                     temp2 =data_frame([el[slice0] for el in temp1.df])
                     
                 # Returning a Data_Frame
@@ -225,7 +231,9 @@ class data_frame:
         else:
 
             print type(dims[0])
+            
             print type(dims[1])
+            
             print('Error! Not valid indices. Select two indices (i,j) for row and column number')
             
 
@@ -276,8 +284,11 @@ class data_frame:
             if len(new_list) < self.nrows:
 
                 new_list.extend([None]*(self.nrows-len(new_list)))
+                
                 self.df.append(new_list)
+                
                 self.ncols +=1
+                
                 self.cnames.append(self.ncols)
 
             elif len(new_list) > self.nrows:
@@ -287,7 +298,9 @@ class data_frame:
             else:
 
                 self.df.append(new_list)
+                
                 self.ncols += 1
+                
                 self.cnames.append(self.ncols)
                 
 
@@ -323,6 +336,7 @@ class data_frame:
             # Updating number of rows and their names
             
             self.nrows +=1
+            
             self.rnames.append(self.nrows)
     
 
@@ -442,6 +456,7 @@ class data_frame:
         # Note how we choose the which method (i) so that indices instead of booleans are returned
 
         col_index = self.cnames.index(col)
+        
         column = m_lists[col_index]
         #print column.list
 
@@ -495,7 +510,7 @@ class data_frame:
 
         temp2 = data_frame([temp1.df[o-1] for o in view_columns])
         
-        print temp2
+        return temp2
 
         # ======================= SOME OLD STUFF =============================
 
@@ -538,7 +553,8 @@ def SQL(query):
     # SELECT columns FROM Data_Frame WHERE rows_condition
 
     # Implementation through REGULAR EXPRESSIONS
-    col_regex = 'SELECT (.+) FROM .+ WHERE .+'
+    
+    col_regex = 'SELECT (.+) FROM .+ WHERE .+' 
     col = re.findall(col_regex,query)[0]
     
     df_regex = 'SELECT .+ FROM (.+) WHERE .+'
@@ -558,7 +574,59 @@ def SQL(query):
     
     data= globals()[df[0]]
     
-    data.select(int(col_cond),op_cond,value_cond,int(col))
+    result = data.select(int(col_cond),op_cond,value_cond,int(col))
+
+    print result
+
+
+# A Powered version of the former SQL Function to enable for more conditions and more columns projections
+
+def SQL2(query):
+
+    # The query is a string which must respect the following format:
+    # SELECT columns FROM Data_Frame WHERE rows_condition
+
+    # Implementation through REGULAR EXPRESSIONS
+
+    # MULTIPLE COLUMNS (sep = ',')
+    cols_regex = 'SELECT (.+) FROM .+ WHERE .+' 
+    cols = re.findall(cols_regex,query)[0]
+    cols = str(cols).split(',')
+
+    # NO MULTIPLE DATAFRAMES
+    df_regex = 'SELECT .+ FROM (.+) WHERE .+'
+    df = re.findall(df_regex,query)
+    
+    # MULTIPLE CONDITIONS - DEFAULT = (AND) CONDITIONS [Separator = ',']
+    cond_regex = 'SELECT .+ FROM .+ WHERE (.+)'
+    cond = re.findall(cond_regex,query)[0]
+    cond = str(cond).split(',')
+    temp_cond = [el for el in cond]
+
+    conditions = [el.split(' ') for el in temp_cond]
+
+    #print cols
+    #print conditions
+
+    temp_df= globals()[df[0]]
+
+    # EXECUTING THE QUERY
+
+    for num_cond in range(len(conditions)):
+
+        # IMPLENT THE METHOD SELECT AS DEFINED IN THE DATA_FRAME CLASS. INCLUDE ALL COLUMNS FOR NOW
+       
+        temp_df = temp_df.select(int((conditions)[num_cond][0]),(conditions)[num_cond][1],(conditions)[num_cond][2],temp_df.cnames)
+            
+    #op_cond = re.findall(op_cond_regex,query)[0]
+    #value_cond = re.findall(value_cond_regex,query)[0]
+        
+    #data.select(int(col_cond),op_cond,value_cond,int(col))
+    print temp_df
+
+
+
+
 
 # ======================================== TESTING ===================================================
 
