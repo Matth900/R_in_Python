@@ -559,6 +559,40 @@ class data_frame:
 
         print self
 
+    # ======================================== JOIN METHODS ==========================================
+
+    def join(self, other, col_name='', typ = 'std'):
+
+        # Other =  The other data_frame with which we want to make the join
+        # The column name for making the join (NOTE! This must be the same in both Data Frames!!)
+        # Possible type of joins are 1)std (default); 2)left; 3)right; 4)self
+
+        output_query = [[]]
+        
+        if typ == 'std':
+
+            if (col_name in self.cnames == True) and (col_name in other_df.cnames == True):
+
+                pass
+            
+                rows_df1 = [[ el[i] for el in self.df] for i in range(self.nrows)]
+                
+                rows_df2 = [[ el[i] for el in other.df] for i in range(other.nrows)]
+
+                for r1 in rows_df1:
+
+                    for r2 in rows_df2:
+
+                        if r1[self.cnames.index(col_name)] == r2[self.cnames.index(col_name)]:
+
+                            pass
+
+            else:
+                
+                print 'Error! You have not selected a valid column to make the join'
+
+        
+
 # =========================================END OF CLASS DATA.FRAME ===================================
 
 # ===================================HELPER FUNCTIONS TO USE THE DATA.FRAME===========================
@@ -677,5 +711,8 @@ def SQL2(query):
 
 
 #Test1
-a=data_frame([[4,4,False,'Hello','Hello',None,False],[4,4,None,'LNKD','LNKD','FB','MS'],[4,4,'C',True,True,None,'BX']])
+a=data_frame([[4,5,False,'Hello','World',None,False],['Why',14,None,'LNKD','AS','FB','MS'],[2,False,'C',True,'ADB',None,'BX']])
+
+#Test2
+b=data_frame([[4,4,False,'Hello','Hello',None,False],['What',6,True,'BAC','LNKD','FB','MS'],[14,4,'C',True,True,None,'BX']])
 
