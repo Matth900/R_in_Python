@@ -9,9 +9,9 @@ from Mattia import * #import mattia_list
 class data_frame:
 
 
-    def __init__(self, l =[[]] ,row_names ='',col_names=''):
+    def __init__(self, l =[[]] ,row_names ='',col_names='', key=''):
         
-         # (l) must be a LIST of list 
+        # (l) must be a LIST of list 
         self.df = l
       
         lengths = set(len(el) for el in self.df)
@@ -76,8 +76,35 @@ class data_frame:
                     
                     self.cnames = col_names + list(range(len(col_names)+1,self.ncols+1))
 
+            # CHECKING THE KEY IF THE USER HAS PROVIDED ONE
+
+            if key != '':
+
+                if key in self.cnames:
+
+                    self.check_key(self.df[self.cnames.index(key)])
+
+                else:
+
+                    print 'Wrong KEY! Wrong Column(s) name(s)'
 
 
+    def check_key(self,key):
+
+        # function to be called within __init__() initialization method
+
+        # We use here the helper function (defined outside this class) duplicates()
+
+        if duplicates(key) == True:
+
+            print 'Error! Key not valid. There are multiple entries with the same value.'
+            print 'That is not allowed for a primary key. Change column or use a combination of columns'
+
+        else:
+
+            pass
+        
+    
     def __str__(self):
 
         # Printing Column LABELS
@@ -465,7 +492,6 @@ class data_frame:
 
             indices =  column == value
 
-
         elif str(cond_operator) == 'less_equal':
 
             indices = column <= value
@@ -561,20 +587,18 @@ class data_frame:
 
     # ======================================== JOIN METHODS ==========================================
 
-    def join(self, other, col_name='', typ = 'std'):
+    def join(self, other, col_name, typ = 'std'):
 
         # Other =  The other data_frame with which we want to make the join
         # The column name for making the join (NOTE! This must be the same in both Data Frames!!)
         # Possible type of joins are 1)std (default); 2)left; 3)right; 4)self
 
-        output_query = [[]]
+        output_query = [] # This will contain a list of rows for which column entries match and will be the basis for the output Data Frame
         
         if typ == 'std':
 
-            if (col_name in self.cnames == True) and (col_name in other_df.cnames == True):
+            if (col_name in self.cnames) and (col_name in other.cnames):
 
-                pass
-            
                 rows_df1 = [[ el[i] for el in self.df] for i in range(self.nrows)]
                 
                 rows_df2 = [[ el[i] for el in other.df] for i in range(other.nrows)]
@@ -585,12 +609,30 @@ class data_frame:
 
                         if r1[self.cnames.index(col_name)] == r2[self.cnames.index(col_name)]:
 
-                            pass
+                            output_query.append(r1+r2)
+
+                # Create a Resulting Data Frame out of the new created tuples
+
+                joined_df = data_frame([[el[j] for el in output_query] for j in range(self.ncols+other.ncols)])
+
+                # Re-Labelling (ONLY COLUMNS) of the new MERGED DataFrame
+
+                labels_self = ['A.{}'.format(name) for  name in self.cnames]
+
+                labels_other = ['B.{}'.format(name) for name in other.cnames]
+
+                labels_joined = labels_self+labels_other # Concatenating the two lists of  labes (column names)
+
+                joined_df.cnames = labels_joined
+
+                print joined_df
+
+                return joined_df
 
             else:
                 
                 print 'Error! You have not selected a valid column to make the join'
-
+                print other
         
 
 # =========================================END OF CLASS DATA.FRAME ===================================
@@ -679,9 +721,6 @@ def SQL2(query):
 
     conditions = [el.split(' ') for el in temp_cond]
 
-    #print cols
-    #print conditions
-
     temp_df= globals()[df[0]]
 
     # EXECUTING THE QUERY
@@ -690,29 +729,61 @@ def SQL2(query):
 
     for num_cond in range(len(conditions)):
 
-        temp_df = temp_df.select(int((conditions)[num_cond][0]),(conditions)[num_cond][1],(conditions)[num_cond][2],temp_df.cnames)
+        # Remember that the value we use to test the condition could be (almost always) a number, a string, a Boolean, or a None Type
+        # The problem is that the REGEX use to capture it
+
+        if (conditions[num_cond][2]) == 'True':
+
+            value = True
+
+        elif conditions[num_cond][2] == 'False':
+
+            value = False
+
+        elif conditions[num_cond][2] == 'None':
+
+            value = None
+
+        else:
+
+            try:
+                        
+                value = float(conditions[num_cond][2])
+
+            except:
+
+                value = conditions[num_cond][2]
+                        
+        
+        temp_df = temp_df.select(int((conditions)[num_cond][0]),(conditions)[num_cond][1],value,temp_df.cnames)
 
     # STEP 2: PROJECT COLUMNS ON THE RESULTING RELATION FROM THE APPLIED CONDITIONS
 
     temp_df = data_frame([temp_df.df[int(proj_col)-1] for proj_col in cols])
             
-    #op_cond = re.findall(op_cond_regex,query)[0]
-    #value_cond = re.findall(value_cond_regex,query)[0]
-        
-    #data.select(int(col_cond),op_cond,value_cond,int(col))
     print temp_df
 
 
+
+# An helper function to spot duplicate elements within a list
+
+def duplicates(lst):
+
+    # Argument  is simply a list
+
+    for el_i in lst:
+
+        for j in range(lst.index(el_i)+1,len(lst)):
+
+            if el_i == lst[j]:
+
+                return True
+
 # ======================================== TESTING ===================================================
 
-
-#Test0
-#a=data_frame([[1,True,False,'Hello','World',None,False],[4,'AAPL',None,'LNKD','TWTR','FB','MS'],['BAC','DB','C',True,False,None,'BX']],['A','B','C','D','E','F','G'],['STOCK1','STOCK2','STOCK3'])      
-
-
 #Test1
-a=data_frame([[4,5,False,'Hello','World',None,False],['Why',14,None,'LNKD','AS','FB','MS'],[2,False,'C',True,'ADB',None,'BX']])
+a=data_frame([[10,2,False,'Hello','World',None,False],['Why',14,None,'LNKD','AS','FB','MS'],[2,False,'C',True,'ADB',None,'BX']])
 
 #Test2
-b=data_frame([[4,4,False,'Hello','Hello',None,False],['What',6,True,'BAC','LNKD','FB','MS'],[14,4,'C',True,True,None,'BX']])
+b=data_frame([[4,8,'Pie','Matth',True,'ABC',False],['What',6,True,'BAC','LNKD','FB','MS'],[14,4,'C',True,True,None,'BX']])
 
