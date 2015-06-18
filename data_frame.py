@@ -82,14 +82,14 @@ class data_frame:
 
                 if key in self.cnames:
 
-                    self.check_key(self.df[self.cnames.index(key)])
+                    self.check_key(self.df[self.cnames.index(key)],key)
 
                 else:
 
                     print 'Wrong KEY! Wrong Column(s) name(s)'
 
 
-    def check_key(self,key):
+    def check_key(self,key_col,key_name):
 
         # function to be called within __init__() initialization method
 
@@ -102,7 +102,7 @@ class data_frame:
 
         else:
 
-            pass
+            self.key = key_name # We will identify the key in a dataframe by name
         
     
     def __str__(self):
@@ -254,7 +254,7 @@ class data_frame:
 
             else:
 
-                print('Error! Not valid indices. Make sure they are integers and within the bounds of the dataframed')
+                print 'Error! Not valid indices. Make sure they are integers and within the bounds of the dataframed'
 
         else:
 
@@ -262,8 +262,25 @@ class data_frame:
             
             print type(dims[1])
             
-            print('Error! Not valid indices. Select two indices (i,j) for row and column number')
-            
+            print 'Error! Not valid indices. Select two indices (i,j) for row and column number'
+
+
+    # Sort the Data Frame with respect to a specific column
+    # ======================================= WORK IN PROGRESS ON SORTING ===================================
+    def order(self,col='',typ = ''):
+
+        #pass
+
+        old_df = self.df
+
+        pivot = sorted(old_df[self.cnames.index(col)])
+
+        new_order = [old_df[self.cnames.index(col)].index(el) for el in pivot]
+
+        print pivot
+        print new_order
+
+    # =======================================================================================================
 
     # Implementing some other (R) subsetting and viewing functions as Head,Tail ecc
 
@@ -273,7 +290,7 @@ class data_frame:
 
         if value > self.nrows:
 
-            print('Error! You selected more rows than those of the Data Frame. Choose a lower value')
+            print 'Error! You selected more rows than those of the Data Frame. Choose a lower value'
 
         else:
             
@@ -457,7 +474,7 @@ class data_frame:
 
 
     # ========================================== SQL Methods for DATA FRAME CLASS ===========================================
-
+    
     # Some SQL-Like / Relational Algebra statement to select only some rows within the data frame
     def select(self,col ='', cond_operator='', value='', out=0):
 
@@ -585,13 +602,49 @@ class data_frame:
 
         print self
 
+    # ======================================== CROSS PRODUCT =========================================
+
+    def cross(self,other):
+
+        # The cross function indicates the cross product between Data Frames (Cartesian Like among tuples of the two Data Frames
+
+        output_query= []
+
+        rows_df1 = [[ el[i] for el in self.df] for i in range(self.nrows)]
+                
+        rows_df2 = [[ el[i] for el in other.df] for i in range(other.nrows)]
+
+        for r1 in rows_df1:
+
+            for r2 in rows_df2:
+
+                output_query.append(r1+r2)
+
+        # Create a Resulting Data Frame out of the new created tuples
+
+        joined_df = data_frame([[el[j] for el in output_query] for j in range(self.ncols+other.ncols)])
+
+        # Re-Labelling (ONLY COLUMNS) of the new MERGED DataFrame
+
+        labels_self = ['A.{}'.format(name) for  name in self.cnames]
+
+        labels_other = ['B.{}'.format(name) for name in other.cnames]
+
+        labels_joined = labels_self+labels_other # Concatenating the two lists of  labes (column names)
+
+        joined_df.cnames = labels_joined
+
+        print joined_df
+
+        return joined_df
+
     # ======================================== JOIN METHODS ==========================================
 
     def join(self, other, col_name, typ = 'std'):
 
         # Other =  The other data_frame with which we want to make the join
         # The column name for making the join (NOTE! This must be the same in both Data Frames!!)
-        # Possible type of joins are 1)std (default); 2)left; 3)right; 4)self
+        # Possible type of joins are 1)INNER (default); 2)left (outer) ; 3)right (outer) ; 4)Natural
 
         output_query = [] # This will contain a list of rows for which column entries match and will be the basis for the output Data Frame
         
@@ -632,9 +685,70 @@ class data_frame:
             else:
                 
                 print 'Error! You have not selected a valid column to make the join'
+                
                 print other
         
+ 
+    # OVERLOADING THE ADDITION/CONCATENATION OPERATOR
+    # Concatenate Data Frames
 
+    def __add__(self,other):
+
+        # ARGUMENTS: 1) Other: The other Data Frame. 2)by: either by row or col (col is the default)
+        
+        # RULES for concatenating Data Frames:
+        ## 1) If Concatenation by rows, the two data frames must have the same number of columns
+        ## 2) If Concatenation by cols, the two data frames must have the same number of rows
+
+        # FIRST : Ask user whether he wants to concatenate by  row or column
+
+        by = raw_input('How do you want to concatenate (col/row)?')
+        
+        if by ==  'col':
+
+            if self.nrows != other.nrows:
+
+                print 'Error! You cannot concatenate by columns two Data Frames with different number of rows'
+
+            else:
+
+                new_df =  self.df+other.df
+
+                new = data_frame(new_df)
+
+                return new
+            
+        elif by  == 'row':
+
+            if self.ncols != other.ncols:
+
+                print 'Error! You cannot concatenate by rows two Data Frames with different number of columns'
+
+            else:
+
+                new_df = []
+
+                i = 0
+                
+                for el in self.df:
+
+                    temp = []
+
+                    for each_el in el:
+
+                        temp.append(each_el)  
+                    
+                    temp.extend(other.df[i])
+
+                    new_df.append(temp)
+
+                    i += 1 
+
+                new = data_frame(new_df)
+                
+                return new
+
+    
 # =========================================END OF CLASS DATA.FRAME ===================================
 
 # ===================================HELPER FUNCTIONS TO USE THE DATA.FRAME===========================
@@ -782,7 +896,7 @@ def duplicates(lst):
 # ======================================== TESTING ===================================================
 
 #Test1
-a=data_frame([[10,2,False,'Hello','World',None,False],['Why',14,None,'LNKD','AS','FB','MS'],[2,False,'C',True,'ADB',None,'BX']])
+a=data_frame([[10,2,False,'Hello','World',None,False],['Why',14,None,'LNKD','AS','FB','MS'],[8,3,5,4,6,7,11]])
 
 #Test2
 b=data_frame([[4,8,'Pie','Matth',True,'ABC',False],['What',6,True,'BAC','LNKD','FB','MS'],[14,4,'C',True,True,None,'BX']])
