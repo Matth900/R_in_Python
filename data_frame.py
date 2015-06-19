@@ -3,11 +3,13 @@
 # Use together with other R-Like utilities (Mattia_lists)
 
 import re # REGEX- Regular expression module, will be used to identify patterns when subsetting - (__getiem__ overloading)
-from Mattia import * #import mattia_list
+from Mattia import * #import mattia_list to help with logical comparisons
+
+import math
+import numpy as np # NumPy to help us with some not built-in functions as the List Mean
 
 
 class data_frame:
-
 
     def __init__(self, l =[[]] ,row_names ='',col_names='', key=''):
         
@@ -266,21 +268,34 @@ class data_frame:
 
 
     # Sort the Data Frame with respect to a specific column
-    # ======================================= WORK IN PROGRESS ON SORTING ===================================
+    
     def order(self,col='',typ = ''):
 
-        #pass
+        # typ =  Indictes the type (Ascending/Descending) through which we want to sort
 
         old_df = self.df
 
-        pivot = sorted(old_df[self.cnames.index(col)])
+        target_col = old_df[self.cnames.index(col)]
+        
+        ordered_column = sorted(target_col) 
 
-        new_order = [old_df[self.cnames.index(col)].index(el) for el in pivot]
+        # We now calculate the list of the ordering Indices which will be our iterator in reatinng the new Data Frame
 
-        print pivot
-        print new_order
+        ordering_iterator = [ordered_column.index(el) for el in target_col]
 
-    # =======================================================================================================
+        # CREATE A NEW DATAFRAME respecting the new ordering indices
+
+        final_iterator = [ordering_iterator.index(j) for j in range(self.nrows)]
+
+        new_df = [[el[i] for i in final_iterator] for el in self.df]
+
+        sorted_df = data_frame(new_df)
+
+        print sorted_df # Print the new SORTED Data Frame as a test to see whether the method works fine before returnig the item
+
+        return sorted_df
+     
+    # ======================================= OTHER TYPICAL R DATA FRAMES METHODS ===================================
 
     # Implementing some other (R) subsetting and viewing functions as Head,Tail ecc
 
@@ -602,6 +617,13 @@ class data_frame:
 
         print self
 
+
+    # ======================================== DICTIONARY FOR SQL AGGREGATOR  OPERATORS ==============
+
+    # Aggregator operators on DataFrames Columns when implementing a query
+
+    agg_funtions  = {'MAX': max, 'MIN': min, 'AVG': np.mean}
+    
     # ======================================== CROSS PRODUCT =========================================
 
     def cross(self,other):
@@ -840,18 +862,60 @@ def SQL(query):
 
 def SQL2(query):
 
+    flag = '' # This Flaggin variable is useful since it indicates whether we are performing an Aggregation Query or Not
+    
     # The query is a string which must respect the following format:
     # SELECT columns FROM Data_Frame WHERE rows_condition
 
     # Implementation through REGULAR EXPRESSIONS
 
-    # MULTIPLE COLUMNS (sep = ',')
-    cols_regex = 'SELECT (.+) FROM .+ WHERE .+'
-    
-    cols = re.findall(cols_regex,query)[0]
-    
-    cols = str(cols).split(',')
+    # CATCH (If Any) AGGREGATOR OPERATOR
 
+    aggre_regex = 'SELECT (.+) .+ FROM .+ WHERE .+'
+
+    agg = re.findall(aggre_regex,query)
+
+    if len(agg) ==  0
+
+        # No-Aggregator - Simply look for (MULTIPLE) COLUMNS (sep = ',')
+
+        cols_regex = 'SELECT (.+) FROM .+ WHERE .+'
+    
+        cols = re.findall(cols_regex,query)[0]
+    
+        cols = str(cols).split(',')
+
+    else:
+
+        aggregator = str(agg[0])
+
+        # Make sure the aggreagor is written in Upper Case, to be consistent with our Aggregate Functions dictionarry define inside the class
+
+        aggregator.upper()
+
+        # Check that effectvely the aggreator functionn chosen is present in  the dictionary defined within the Data Frame Class
+
+        if aggregator not in  agg_funtions.keys():
+
+            print 'Error! The aggregation opeerator you selected is not valid'
+
+        else:
+
+            flag = 'Aggreation'
+
+            cols_regex = 'SELECT .+ (.+) FROM .+ WHERE .+'
+    
+            cols = re.findall(cols_regex,query)[0]
+
+            if type(cols)  ==  list:
+
+                print 'Error! You cannot apply an aggreator operator on multiple columns. Choose One'
+
+            else:
+            
+                cols = str(cols)
+            
+        
     # NO MULTIPLE DATAFRAMES
     df_regex = 'SELECT .+ FROM (.+) WHERE .+'
     
@@ -908,8 +972,25 @@ def SQL2(query):
 
     temp_df = data_frame([temp_df.df[int(proj_col)-1] for proj_col in cols])
             
-    print temp_df
+    # STEP 3: Check whether we have to return the new dataframe or simply apply an AGGREATION Operator
 
+    if flag != 'Aggregation':
+        
+        # Before returning the Final Data Frame we, as usual, print the query result to have a visual impression of whether everything's as expected
+    
+        print temp_df
+    
+        return temp_df
+
+    else:
+
+        try:
+
+            pass # Here we should apply the Aggregator Operator (Whether Possible: i.e. there  is no mean for strings....)
+
+        except:
+
+            print 'The aggregator operator you selected cannot be applied on the  column type you chose. Check your query'
 
 
 # An helper function to spot duplicate elements within a list
