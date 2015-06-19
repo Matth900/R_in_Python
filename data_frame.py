@@ -644,49 +644,82 @@ class data_frame:
 
         # Other =  The other data_frame with which we want to make the join
         # The column name for making the join (NOTE! This must be the same in both Data Frames!!)
-        # Possible type of joins are 1)INNER (default); 2)left (outer) ; 3)right (outer) ; 4)Natural
+        # Possible type of joins are 1)INNER (default); 2)left (outer) ; 3)right (outer) ; 4)FULL OUTER (Left + Right)
 
         output_query = [] # This will contain a list of rows for which column entries match and will be the basis for the output Data Frame
+
+        flag_matches  =  []
         
-        if typ == 'std':
+        if (col_name in self.cnames) and (col_name in other.cnames):
 
-            if (col_name in self.cnames) and (col_name in other.cnames):
+            rows_df1 = [[ el[i] for el in self.df] for i in range(self.nrows)]
+            
+            rows_df2 = [[ el[i] for el in other.df] for i in range(other.nrows)]
 
-                rows_df1 = [[ el[i] for el in self.df] for i in range(self.nrows)]
+            for r1 in rows_df1:
+
+                flag = ''  # This is a string variable which helps us to determine whether there has been a matched for a particular row  of the Data Frame
                 
-                rows_df2 = [[ el[i] for el in other.df] for i in range(other.nrows)]
+                for r2 in rows_df2:
 
-                for r1 in rows_df1:
+                    if r1[self.cnames.index(col_name)] == r2[self.cnames.index(col_name)]:
 
-                    for r2 in rows_df2:
+                        output_query.append(r1+r2)
 
-                        if r1[self.cnames.index(col_name)] == r2[self.cnames.index(col_name)]:
+                        flag = 'matched'
 
-                            output_query.append(r1+r2)
+                        flag_matches.append(rows_df2.index(r2))
 
-                # Create a Resulting Data Frame out of the new created tuples
 
-                joined_df = data_frame([[el[j] for el in output_query] for j in range(self.ncols+other.ncols)])
+                # Now check whether the user wants an OUTER JOIN (LEFT)
 
-                # Re-Labelling (ONLY COLUMNS) of the new MERGED DataFrame
+                if flag == 'matched' :
 
-                labels_self = ['A.{}'.format(name) for  name in self.cnames]
+                    next
 
-                labels_other = ['B.{}'.format(name) for name in other.cnames]
+                else:
+                    
+                    if typ == 'left' or typ == 'full':
 
-                labels_joined = labels_self+labels_other # Concatenating the two lists of  labes (column names)
+                        temp_null_row  = [None]*other.ncols
 
-                joined_df.cnames = labels_joined
+                        output_query.append(r1+temp_null_row)
 
-                print joined_df
 
-                return joined_df
+            # Now check whether the user wants an OUTER RIGHT  JOIN
+            if typ == 'right' or typ ==  'full' :
 
-            else:
-                
-                print 'Error! You have not selected a valid column to make the join'
-                
-                print other
+                for r2 in rows_df2:
+
+                    if rows_df2.index(r2) not in flag_matches:
+
+                        temp_null_row = [None]*self.ncols
+
+                        output_query.append(temp_null_row + r2)
+
+            # Create a Resulting Data Frame out of the new created tuples
+
+            joined_df = data_frame([[el[j] for el in output_query] for j in range(self.ncols+other.ncols)])
+
+            # Re-Labelling (ONLY COLUMNS) of the new MERGED DataFrame
+
+            labels_self = ['A.{}'.format(name) for  name in self.cnames]
+
+            labels_other = ['B.{}'.format(name) for name in other.cnames]
+
+            labels_joined = labels_self+labels_other # Concatenating the two lists of  labes (column names)
+
+            joined_df.cnames = labels_joined
+
+            print joined_df
+
+            return joined_df
+
+        else:
+            
+            print 'Error! You have not selected a valid column to make the join'
+            
+            print other
         
  
     # OVERLOADING THE ADDITION/CONCATENATION OPERATOR
