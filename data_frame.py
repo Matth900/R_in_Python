@@ -491,7 +491,7 @@ class data_frame:
     # ========================================== SQL Methods for DATA FRAME CLASS ===========================================
     
     # Some SQL-Like / Relational Algebra statement to select only some rows within the data frame
-    def select(self,col ='', cond_operator='', value='', out=0):
+    def select(self,col ='', cond_operator='', value='', out=''):
 
     # The condition must be written between quotes and must 
         '''
@@ -506,8 +506,7 @@ class data_frame:
     '''
 
         # WORK IN PROGRES!!! NOT FINISHED-----------------------------------------------------------------
-        # Probably have to use mattia_lists
-
+       
         # STEP 1 - Creating mattia_lists from the DataFrame
 
         # Generator of Mattia Lists
@@ -567,7 +566,16 @@ class data_frame:
 
             view_columns.append(out)
 
-        temp2 = data_frame([temp1.df[o-1] for o in view_columns])
+        try:
+            
+
+            temp2 = data_frame([temp1.df[o-1] for o in view_columns])
+
+        except:
+
+            # If we get an error might be that the column names are strings and not the default integers.
+           
+            temp2 = data_frame([temp1.df[self.cnames.index(o)] for o in view_columns])
         
         return temp2
 
@@ -926,6 +934,8 @@ def SQL2(query):
 
     temp_df= globals()[df[0]]
 
+    old_df = temp_df
+
     # EXECUTING THE QUERY
 
     # STEP 1: IMPLENT THE METHOD SELECT AS DEFINED IN THE DATA_FRAME CLASS. INCLUDE ALL COLUMNS FOR NOW
@@ -957,12 +967,25 @@ def SQL2(query):
 
                 value = conditions[num_cond][2]
                         
+        try: # Check first whether conditioning columns can be transformed in integers (because maybe we did not insert names)
         
-        temp_df = temp_df.select(int((conditions)[num_cond][0]),(conditions)[num_cond][1],value,temp_df.cnames)
+            temp_df = temp_df.select(int((conditions)[num_cond][0]),(conditions)[num_cond][1],value,temp_df.cnames)
+
+        except:
+
+            temp_df = temp_df.select((conditions)[num_cond][0],(conditions)[num_cond][1],value,temp_df.cnames)
 
     # STEP 2: PROJECT COLUMNS ON THE RESULTING RELATION FROM THE APPLIED CONDITIONS
 
-    temp_df = data_frame([temp_df.df[int(proj_col)-1] for proj_col in cols])
+    # Again Try first with integer indices for column. If it does not work used the provided string.literal instead
+
+    try:
+
+        temp_df = data_frame([temp_df.df[int(proj_col)-1] for proj_col in cols])
+
+    except:
+
+        temp_df = data_frame([temp_df.df[old_df.cnames.index(proj_col)] for proj_col in cols])
             
     # STEP 3: Check whether we have to return the new dataframe or simply apply an AGGREATION Operator
 
@@ -984,6 +1007,7 @@ def SQL2(query):
             # Print the query result as a test before returning the object and exiting the method
             
             print  agg_functions[aggregator](temp_df.df[0])
+            
             return agg_functions[aggregator](temp_df.df[0])
 
         except:
@@ -1020,5 +1044,5 @@ b=data_frame([[4,8,'Pie','Matth',True,'ABC',False],['What',6,True,'BAC','LNKD','
  # Aggregator operators on DataFrames Columns when implementing a query
 
  
-agg_functions  = {'MAX': max, 'MIN': min, 'AVG': np.mean, 'COUNT': len}
+agg_functions  = {'MAX': max, 'MIN': min, 'AVG': np.mean, 'COUNT': len, 'SUM': sum}
 
