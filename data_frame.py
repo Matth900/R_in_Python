@@ -616,13 +616,6 @@ class data_frame:
         self.eliminate(row=duplicates)
 
         print self
-
-
-    # ======================================== DICTIONARY FOR SQL AGGREGATOR  OPERATORS ==============
-
-    # Aggregator operators on DataFrames Columns when implementing a query
-
-    agg_funtions  = {'MAX': max, 'MIN': min, 'AVG': np.mean}
     
     # ======================================== CROSS PRODUCT =========================================
 
@@ -875,7 +868,7 @@ def SQL2(query):
 
     agg = re.findall(aggre_regex,query)
 
-    if len(agg) ==  0
+    if len(agg) ==  0:
 
         # No-Aggregator - Simply look for (MULTIPLE) COLUMNS (sep = ',')
 
@@ -887,7 +880,7 @@ def SQL2(query):
 
     else:
 
-        aggregator = str(agg[0])
+        aggregator = agg[0]
 
         # Make sure the aggreagor is written in Upper Case, to be consistent with our Aggregate Functions dictionarry define inside the class
 
@@ -895,13 +888,13 @@ def SQL2(query):
 
         # Check that effectvely the aggreator functionn chosen is present in  the dictionary defined within the Data Frame Class
 
-        if aggregator not in  agg_funtions.keys():
+        if aggregator not in  agg_functions.keys():
 
             print 'Error! The aggregation opeerator you selected is not valid'
 
         else:
 
-            flag = 'Aggreation'
+            flag = 'Aggregation'
 
             cols_regex = 'SELECT .+ (.+) FROM .+ WHERE .+'
     
@@ -914,8 +907,7 @@ def SQL2(query):
             else:
             
                 cols = str(cols)
-            
-        
+                
     # NO MULTIPLE DATAFRAMES
     df_regex = 'SELECT .+ FROM (.+) WHERE .+'
     
@@ -977,22 +969,29 @@ def SQL2(query):
     if flag != 'Aggregation':
         
         # Before returning the Final Data Frame we, as usual, print the query result to have a visual impression of whether everything's as expected
-    
+        
         print temp_df
     
         return temp_df
 
     else:
 
+
+        # ===================================== WORK INP PROOOOOOOOOOOOOOOOOOOOOOOOOOOOGRESSSSSSSSSSSSSS ========================================
+    
         try:
 
-            pass # Here we should apply the Aggregator Operator (Whether Possible: i.e. there  is no mean for strings....)
+            # Print the query result as a test before returning the object and exiting the method
+            
+            print  agg_functions[aggregator](temp_df.df[0])
+            return agg_functions[aggregator](temp_df.df[0])
 
         except:
 
             print 'The aggregator operator you selected cannot be applied on the  column type you chose. Check your query'
 
-
+        # ===================================== WORK INP PROOOOOOOOOOOOOOOOOOOOOOOOOOOOGRESSSSSSSSSSSSSS ========================================
+        
 # An helper function to spot duplicate elements within a list
 
 def duplicates(lst):
@@ -1006,7 +1005,7 @@ def duplicates(lst):
             if el_i == lst[j]:
 
                 return True
-
+    
 # ======================================== TESTING ===================================================
 
 #Test1
@@ -1014,4 +1013,12 @@ a=data_frame([[10,2,False,'Hello','World',None,False],['Why',14,None,'LNKD','AS'
 
 #Test2
 b=data_frame([[4,8,'Pie','Matth',True,'ABC',False],['What',6,True,'BAC','LNKD','FB','MS'],[14,4,'C',True,True,None,'BX']])
+
+
+# ======================================== DICTIONARY FOR SQL AGGREGATOR  OPERATORS ==============
+
+ # Aggregator operators on DataFrames Columns when implementing a query
+
+ 
+agg_functions  = {'MAX': max, 'MIN': min, 'AVG': np.mean, 'COUNT': len}
 
